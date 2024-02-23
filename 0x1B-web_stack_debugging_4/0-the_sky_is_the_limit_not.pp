@@ -1,13 +1,18 @@
-# Increases the amount of traffic an Nginx server can handle.
+# This Puppet manifest is designed to optimize Nginx configuration for handling high load conditions
 
-# Increase the ULIMIT of the default file
+file { '/etc/nginx/nginx.conf':
+  ensure  => file,
+  content => template('nginx/nginx.conf.erb'),
+  notify  => Service['nginx'],
+}
+
+service { 'nginx':
+  ensure    => running,
+  enable    => true,
+  subscribe => File['/etc/nginx/nginx.conf'],
+}
+
 exec { 'fix--for-nginx':
-  command => 'sed -i "s/15/4096/" /etc/default/nginx',
-  path    => '/usr/local/bin/:/bin/'
-} ->
-
-# Restart Nginx
-exec { 'nginx-restart':
-  command => 'nginx restart',
-  path    => '/etc/init.d/'
+  command     => '/usr/bin/nginx -s reload',
+  refreshonly => true,
 }
